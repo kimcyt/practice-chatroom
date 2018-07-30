@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>User Profile</h1>
+    <form action={"fileupload" + } method="POST" enctype="multipart/form-data">
+        <input type="text" placeholder="username"> <button>Rename</button> <br>
+        <input type="password" placeholder="reset password"> <button>Reset password</button>
+        <div id="icon_display">
+            <img src="" />
+        </div>
+        <span>Change Icon</span><br>
+        <input type="file" name="filename" accept="image/gif, image/jpeg, image/png">
+        <Submit>Submit</Submit>
+    </form>
+    <br>
+    <button onclick="goToChat">Go back to chat</button>
+    <script>
+        function goToChat() {
+            location.href="main.html";
+        }
+    </script>
+</body>
+</html>
