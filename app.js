@@ -28,7 +28,8 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     app.keys = "this_is_my_secret";
     app.use(session({
         store: new redisStore(),
-        cookie: {maxAge: 1000*60*30}
+        ttl: 30*60*1000
+        // cookie: {maxAge: 1000*60*30}
     }));
     let server = app.listen(settings.port);
     let wsServer = new WebSocket.Server({server});
@@ -38,6 +39,7 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     //everytime refresh/close tab, remove user
     wsServer.on("connection", (ws, req)=>{
         ws.wss = wsServer;  // // 绑定WebSocketServer对象:
+
 
         ws.onmessage = function (message) {
             if (message) {

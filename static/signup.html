@@ -6,16 +6,15 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body>
-    <form onsubmit="signUp(event)">
+    <form action="signup" method="POST">
         <span>UserId:</span><input type="text" name="userId" required>
         <br>
         <span>Username:</span><input type="text" name="username" required>
         <br>
-        <span>Password:</span><input type="password" required>
+        <span>Password:</span><input type="password" name="password" required>
         <br>
         <input type="submit" value="Sign Up" >
     </form>
-    <div id="result"></div>
 <!--todo
 
 4.update render list so it displays icon when user sends messages
@@ -24,31 +23,31 @@
 7.display a list of setting options when clicking the icon
 -->
 
-<script>
-    function signUp(e) {
-        e.preventDefault();
-        let id = $("input[name=userId]").val();
-        let name = $("input[name=username]").val();
-        let pwd = $("input[type=password]").val();
-        let userInfo = "userId="+id + "&username=" + name + "&password=" + pwd;
-        fetch("/signup?" + userInfo, {method:"GET"})
-            .then(response=>{
-                if(response.ok){
-                    response.json().then(data=>{
-                        console.log(data);
-                        if(data.status==="ok"){
-                            $("#result").html("<h1>You have signed up successfully.</h1>" +
-                                "<a href='login.html' >Go To Login</a> ");
-                        }
-                        else
-                            $("#result").append("<p></p>").text(data.errorMsg);
-                    })
-                } else{
-                    $("#result").append("<p></p>").text(response.statusText);
-                }
-            })
-    }
-</script>
+<!--<script>-->
+    <!--function signUp(e) {-->
+        <!--e.preventDefault();-->
+        <!--let id = $("input[name=userId]").val();-->
+        <!--let name = $("input[name=username]").val();-->
+        <!--let pwd = $("input[type=password]").val();-->
+        <!--let userInfo = "userId="+id + "&username=" + name + "&password=" + pwd;-->
+        <!--fetch("/signup?" + userInfo, {method:"GET"})-->
+            <!--.then(response=>{-->
+                <!--if(response.ok){-->
+                    <!--response.json().then(data=>{-->
+                        <!--console.log(data);-->
+                        <!--if(data.status==="ok"){-->
+                            <!--$("#result").html("<h1>You have signed up successfully.</h1>" +-->
+                                <!--"<a href='login.html' >Go To Login</a> ");-->
+                        <!--}-->
+                        <!--else-->
+                            <!--$("#result").append("<p></p>").text(data.errorMsg);-->
+                    <!--})-->
+                <!--} else{-->
+                    <!--$("#result").append("<p></p>").text(response.statusText);-->
+                <!--}-->
+            <!--})-->
+    <!--}-->
+<!--</script>-->
 
 
 

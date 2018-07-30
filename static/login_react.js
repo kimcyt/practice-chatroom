@@ -46,6 +46,7 @@ let RenderBody = React.createClass({
         let userInfo = "userId=" + this.state.user + "&password=" + this.state.password;
         //默认情况下，fetch 不会从服务端发送或接收任何 cookies, 如果站点依赖于用户 session，则会导致未经认证的请求
         // （要发送 cookies，必须设置 credentials 选项）
+        //用请求携带的sessionId换取数据
         fetch("/login?" + userInfo, {method:"GET", credentials: "include"})
             .then(response => {
                 if(response.ok){
@@ -92,9 +93,13 @@ let UserInput = React.createClass({
     render: function(){
         return <div className={"userInputs"}>
             <form method={"GET"} >
-                <span>UserId</span><input type={"text"} onChange={this.props.updateUser} required={true}/><br/>
-                <span>Password</span><input type={"password"} onChange={this.props.updatePassword} required={true}/><br/>
-                <input type={"submit"} value={"Login"} onClick={this.props.onSubmit}/><br/><br/>
+                <span>UserId</span><input type={"text"} onChange={this.props.updateUser} required={true}/>
+                <br/>
+                <span>Password</span><input type={"password"} onChange={this.props.updatePassword} required={true}/>
+                <br/>
+                <input type={"submit"} value={"Login"} onClick={this.props.onSubmit}/>
+                <br/>
+                <br/>
                 <a href={"signup.html"}> Sign Up </a>
             </form>
             <p id={"loginResult"}>{this.props.result}</p>
