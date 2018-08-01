@@ -20,18 +20,19 @@ response body = {
  */
 
 async function login(ctx, next) {
-    let [userId, username, password] = tools.parseUser(ctx.url);
+    let userInput = ctx.request.body;
     let sess = ctx.session;
     let response = {};
-    let user = await Users.findUser(userId);
+    let user = await Users.findUser(userInput.userId);
     if(!user){
         response = {status: "error", errorMsg: "UserId does not exist. Please try again."};
     } else{
         //if user verified
-        if(await Users.userVerified(user.userId, password)){
-            sess.regenerateSession();
-            sess.user = {userId: user.userId, username: user.username, icon: user.icon};
-            response = {status: "ok"};
+        if(await Users.userVerified(user, userInput.password)){
+            // sess.regenerateSession();
+            let userInfo = {userId: user.userId, username: user.username, icon: user.icon};
+            ctx.session.user = userInfo;
+            response = {status: "ok", userInfo: userInfo, location: "main.html"};
         } else{
             response = {status: "error", errorMsg: "Invalid userId or password. Please try again or sign up."}
         }
@@ -89,22 +90,23 @@ async function login(ctx, next) {
 }
 
 async function signUp(ctx, next) {
+    let user = ctx.request.body;
     // let [userId, username, password] = tools.parseUser(ctx.url);
     let response = {};
     try {
-        let user = await Users.findUser(ctx.req.body.userId);
-        if(!user){
+        let userExist = await Users.findUser(user.userId);
+        if(!userExist){
             //check whether username exists
-            let userWithSameName = await Users.testUserName(username);
+            let userWithSameName = await Users.testUserName(user.username);
             if(userWithSameName){
                 response.status = "error";
                 response.errorMsg = "Username already taken, please try again."
             } else{
-                await Users.addUser(userId, username, password);
+                await Users.addUser(user.userId, user.username, user.password);
                 response.status = "ok";
                 response.userInfo = {
-                    userId: userId,
-                    username: username,
+                    userId: user.userId,
+                    username: user.username,
                     icon: "./user_icons/default.png"
                 }
                 // ctx.cookies.set({"username": username});
@@ -126,37 +128,45 @@ async function logOut(ctx, next){
     // let [userId] = tools.parseUser(ctx.url);
     // if(userId)
     //     Users.logUser(userId, false);
-    ctx.req.session.destroy(function (err) {
-        if(err){
-            console.log("logout failed:", err);
-            return;
-        }
-        ctx.cookies.clearAll();
-        ctx.redirect("login.html");
-    });
+    ctx.session = null;
+    // ctx.session.destroy(function (err) {
+    //     if(err){
+    //         console.log("logout failed:", err);
+    //         return;
+    //     }
+    //     ctx.cookies.clearAll();
+    //     // ctx.redirect("login.html");
+    // });
 
 }
 
 async function logIn(ctx, next){
-    console.log("iam in logIn!!!!!!!!" );
-    console.log("logging in");
     let [userId] = tools.parseUser(ctx.url);
     if(userId)
         Users.logUser(userId, true);
 }
 
 async function processFile(ctx){
-    let [userId] = tools.parseUser(ctx.url);
+    //save the mew icon to local storage, delete the old icon
+    console.log("iam in processFile");
+    let userId = ctx.session.user.userId;
     var form = new formidable.IncomingForm();
+    if(form)
+        console.log("form", form);
     form.parse(ctx.req, function (err, fields, files) {
         let temPath = files.filetoupload.path;
-        let newPath = "C:/Users/PC1024/WebstormProjects/chatRoom/static/user_icons/" + files.filetoupload.name;
+        let newPath = "C:/Users/PC1024/WebstormProjects/chatRoom/static/user_icons/" +userId+files.filetoupload.name;
         fs.rename(temPath, newPath, function (err) {
             if(err)
                 throw err;
         });
-        Users.updateIcon(userId, "./user_icons/" + files.filetoupload.name);
+        Users.updateIcon(userId, "./user_icons/" + userId+ files.filetoupload.name);
+        ctx.response.body = JSON.stringify({"status": "ok"});
     })
+}
+
+async function getUserInfo(ctx){
+    ctx.response.body = JSON.stringify(ctx.session.user);
 }
 
 module.exports = {
@@ -164,5 +174,6 @@ module.exports = {
     "/login/": login,
     "/logout/": logOut,
     "/logIn/": logIn,
-    "/fileupload": processFile
+    // "/fileupload/": processFile,
+    "/getUserInfo/": getUserInfo
 };

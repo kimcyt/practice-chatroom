@@ -7,8 +7,10 @@ const serve = require("koa-static");
 const controller = require("./controllers/controller");
 const logger = require('koa-logger');
 const settings = require("./configs/consts");
-const session = require("koa-generic-session");
-const redisStore = require("koa-redis");
+const session = require("koa-session");
+const bodyParser = require("koa-bodyparser");
+// const redisStore = require("koa-redis");
+const FileStore = require("session-file-store");
 const path = require("path");
 const app = new Koa();
 const Users = require("./models/users");
@@ -22,28 +24,25 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     //     if (setting) config.setting = setting;
     // })
 }).then(()=>{
+    app.keys = ["this_is_my_secret"];
     app.use(logger());
+    app.use(session({key: "big:face", maxAge: 30*60*1000}, app));
+    app.use(bodyParser());
     app.use(controller());
     app.use(serve(path.resolve(__dirname, "static")));
-    app.keys = "this_is_my_secret";
-    app.use(session({
-        store: new redisStore(),
-        ttl: 30*60*1000
-        // cookie: {maxAge: 1000*60*30}
-    }));
+
+
+
     let server = app.listen(settings.port);
     let wsServer = new WebSocket.Server({server});
-    ///tie user list to server
-    // wsServer.userLogs = [];
-    //everytime refresh(receive join), when new connection is generated, add to user
-    //everytime refresh/close tab, remove user
+
     wsServer.on("connection", (ws, req)=>{
         ws.wss = wsServer;  // // 绑定WebSocketServer对象:
 
 
         ws.onmessage = function (message) {
             if (message) {
-                console.log('received message; ', message.data);
+                // console.log('received message; ', message.data);
                 let parsedMessage = JSON.parse(message.data);
 
                 let username = parsedMessage.user;
@@ -55,10 +54,10 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
                     users.push(username);
                 }
                 else if(parsedMessage.type === "left"){
-                    console.log("left received");
+                    // console.log("left received");
                     removeFromList(username);
                 }
-                console.log("current users", users);
+                // console.log("current users", users);
                 // remove a user
                 // broadcast to all users in the chat
                 let msg = tools.formatMsg(users, parsedMessage.type, username, parsedMessage.data);

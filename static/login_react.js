@@ -43,12 +43,14 @@ let RenderBody = React.createClass({
     onSubmit: function(event){
         //fetch authentication result
         event.preventDefault();
-        let userInfo = "userId=" + this.state.user + "&password=" + this.state.password;
+        let userInfo = {userId: this.state.user, password: this.state.password};
         //默认情况下，fetch 不会从服务端发送或接收任何 cookies, 如果站点依赖于用户 session，则会导致未经认证的请求
         // （要发送 cookies，必须设置 credentials 选项）
         //用请求携带的sessionId换取数据
-        fetch("/login?" + userInfo, {method:"GET", credentials: "include"})
-            .then(response => {
+        fetch("/login/", {
+            method:"POST", body: JSON.stringify(userInfo),
+            headers: {"Content-Type": "application/json"}, credentials: "include"
+        }).then(response => {
                 if(response.ok){
                     response.json().then(data=>{
                         if(data.status==="ok"){

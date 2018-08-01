@@ -68,6 +68,7 @@ Users.statics.updateIcon = async function(userId, path){
 
 Users.statics.userVerified = async function (user, password) {
     try {
+        console.log(user, password);
         return (user && password === user["password"]);
     } catch (e) {
         throw e;

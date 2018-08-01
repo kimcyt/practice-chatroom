@@ -3,7 +3,10 @@ var router = require("koa-router")();
 
 function addMapping(router, index) {
     for (let url in index){
-        router.get(url, index[url]);
+        if(url==="/signup/" || url==="/login/")
+            router.post(url, index[url]);
+        else
+            router.get(url, index[url]);
     }
 }
 

@@ -1,3 +1,8 @@
+/*
+when click logout, need to clear sessions since they dont clear themselves if the tab is still open
+
+ */
+
 
 class Body extends React.Component{
     constructor(props){
@@ -26,8 +31,9 @@ class Body extends React.Component{
         this.connection = new WebSocket("ws://localhost:3000");
         this.connection.onmessage = this.handleServerMsg;
         this.connection.onopen = this.joinUser;
+        //when jumping to another
         window.onbeforeunload = this.logOut;
-        // console.log("icon clicked", this.state.iconClicked);
+        console.log("icon clicked", this.state.iconClicked);
     }
 
     handleServerMsg(event) {
@@ -119,6 +125,7 @@ class Body extends React.Component{
 
     profileOnClick(event){
         // let elm = event.target;
+        console.log("onclick", this.state.iconClicked);
         this.setState({iconClicked: !this.state.iconClicked});
         // window.location.href = "user_profile.html";
     }
@@ -133,7 +140,7 @@ class Body extends React.Component{
 
         this.connection.send(JSON.stringify(msg));
         // fetch("/logout?userId="+sessionStorage.getItem("userId"),{method:"GET"});
-        window.sessionStorage.clear();
+        // window.sessionStorage.clear();
         window.location.href = "login.html";
 
 
@@ -192,7 +199,7 @@ class Body extends React.Component{
 let SettingList = React.createClass({
    render: function () {
        if(this.props.clicked){
-           this.props.resetClick();
+           // this.props.resetClick();
            return <div>
                <ul>
                    <li><a href={"user_profile.html"}>Profile</a></li>
