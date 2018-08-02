@@ -15,11 +15,7 @@ const Users = new Schema({
         type: String,
         required: true
     },
-    icon: {
-        type: String,
-        required: true,
-        default: "./user_icons/default.png"
-    },
+
     onLogin: {
         type: Boolean,
         default: false
@@ -52,19 +48,23 @@ Users.statics.addUser = async function(userId, username, password){
     }
 };
 
-Users.statics.updateIcon = async function(userId, path){
-    this.update({userId: userId}, {$set: {icon: path}}, function (err) {
-        if(err)
-            throw err;
-    })
-};
 
 
-//
+
 // Users.statics.logUser = async function(userId, logged){
 //     console.log("------------changing login state to", logged);
 //     await this.update({userId: userId}, {$set: {onLogin:logged}});
 // };
+
+Users.statics.rename = async function(userId, newName){
+    await this.update({userId: userId}, {$set: {username:newName}});
+};
+
+
+Users.statics.changePassword = async function(userId, newPwd){
+    await this.update({userId: userId}, {$set: {password:newPwd}});
+};
+
 
 Users.statics.userVerified = async function (user, password) {
     try {

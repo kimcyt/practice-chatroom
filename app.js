@@ -10,10 +10,8 @@ const settings = require("./configs/consts");
 const session = require("koa-session");
 const bodyParser = require("koa-bodyparser");
 // const redisStore = require("koa-redis");
-const FileStore = require("session-file-store");
 const path = require("path");
 const app = new Koa();
-const Users = require("./models/users");
 let users = [];
 
 

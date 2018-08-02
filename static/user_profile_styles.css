@@ -1,0 +1,32 @@
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    padding-left: 40%;
+    padding-right: 40%;
+}
+
+body div{
+    margin-bottom: 30px;
+}
+
+body input{
+    padding: 6px;
+    margin: 10px;
+}
+
+body button{
+    margin: 6px;
+}
+
+.header img{
+    width: 150px;
+    height: 150px;
+}
+
+#goToChat{
+    float: right;
+}

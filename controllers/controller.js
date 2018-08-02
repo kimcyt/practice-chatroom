@@ -1,9 +1,9 @@
-var index = require("./index"); //一个包含了url处理函数的object
-var router = require("koa-router")();
+const index = require("./index"); //一个包含了url处理函数的object
+const router = require("koa-router")();
 
 function addMapping(router, index) {
     for (let url in index){
-        if(url==="/signup/" || url==="/login/")
+        if(url==="/signup/" ||"/login/" || "/updateUsername/")
             router.post(url, index[url]);
         else
             router.get(url, index[url]);

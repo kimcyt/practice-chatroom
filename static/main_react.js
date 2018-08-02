@@ -1,7 +1,3 @@
-/*
-when click logout, need to clear sessions since they dont clear themselves if the tab is still open
-
- */
 
 
 class Body extends React.Component{
@@ -106,14 +102,13 @@ class Body extends React.Component{
 
     renderList(data) {
 
-        const listItems = data.map((elm) => {
+        return data.map((elm) => {
             return <li>
                 <div className={"message"}><img src={this.state.icon}/>
                     <span>{elm}</span>
                 </div>
             </li>
         });
-        return listItems;
     }
 
     scrollToBottom(){
@@ -123,7 +118,7 @@ class Body extends React.Component{
         this.scroller.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
     }
 
-    profileOnClick(event){
+    profileOnClick(){
         // let elm = event.target;
         console.log("onclick", this.state.iconClicked);
         this.setState({iconClicked: !this.state.iconClicked});
@@ -131,6 +126,18 @@ class Body extends React.Component{
     }
 
     logOut(){
+
+        let entry = window.performance.getEntriesByType("navigation");
+        if(entry[0].type!=="reserved"){
+            return;
+        }
+        //when refresh, sessions are still here
+
+
+        //when go to another page
+
+
+        //when click logout
         if(!window.sessionStorage.getItem("username"))
             return;
         let msg = {};
@@ -194,7 +201,7 @@ class Body extends React.Component{
             </div>
         </div>
     }
-};
+}
 
 let SettingList = React.createClass({
    render: function () {
@@ -236,7 +243,7 @@ let MsgList = React.createClass({
 
 let TextBox = React.createClass({
 
-    sendByEnter: function(event, msg){
+    sendByEnter: function(event){
         if(event.key==="Enter"){
             this.props.sendMsg(this.props.text);
         }

@@ -57,7 +57,8 @@ let RenderBody = React.createClass({
                             let userInfo = data.userInfo;
                             window.sessionStorage.setItem("userId", userInfo.userId);
                             window.sessionStorage.setItem("username", userInfo.username);
-                            window.sessionStorage.setItem("icon", userInfo.icon);
+                            // window.sessionStorage.setItem("icon", userInfo.icon);
+                            window.sessionStorage.setItem("icon", localStorage.getItem(userInfo.userId) || "./user_icons/default.png");
                             window.location.href = data.location;
                         }
                         else
