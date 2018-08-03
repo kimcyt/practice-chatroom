@@ -9,10 +9,12 @@ const logger = require('koa-logger');
 const settings = require("./configs/consts");
 const session = require("koa-session");
 const bodyParser = require("koa-bodyparser");
-// const redisStore = require("koa-redis");
+const Users = require("./models/users");
 const path = require("path");
 const app = new Koa();
-let users = [];
+const MongoStore = require('./utils/MongoStore');
+let users = []; //a list of unique userID
+let userList = []; // a list of users that contains username and icon
 
 
 
@@ -24,7 +26,12 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
 }).then(()=>{
     app.keys = ["this_is_my_secret"];
     app.use(logger());
-    app.use(session({key: "big:face", maxAge: 30*60*1000}, app));
+    app.use(session({
+        key: "big:face",
+        maxAge: 30*60*1000,
+        // signed: false,
+        store: MongoStore
+    }, app));
     app.use(bodyParser());
     app.use(controller());
     app.use(serve(path.resolve(__dirname, "static")));
@@ -36,29 +43,40 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
 
     wsServer.on("connection", (ws, req)=>{
         ws.wss = wsServer;  // // 绑定WebSocketServer对象:
+        //--todo: if userId is already online, reject the connection
+        console.log("connection req");
 
-
-        ws.onmessage = function (message) {
+        ws.onmessage = async function (message) {
+            //--todo: update userList everytime message received
+            // when received join-userId, get all the info of the id, add to userList
             if (message) {
                 // console.log('received message; ', message.data);
                 let parsedMessage = JSON.parse(message.data);
 
-                let username = parsedMessage.user;
+                //when join, user is an object that contains all userInfo
+                let userId = parsedMessage.userId;
+                let user = await Users.findUser(userId);
+                // console.log("------user in app", user);
 
-                if (parsedMessage.type === "join" && users.indexOf(username) === -1){
-                    //if the message is from a new user, add to the list
-                    console.log("new user");
-                    // ws.userId = parsedMessage.userId;
-                    users.push(username);
+                if (parsedMessage.type === "join"){
+                    //if new user
+                    if(users.indexOf(user.userId) === -1){
+                        users.push(user.userId);
+                    } else{
+                        //if old user, update icon/name in userList
+                        removeFromList(user.userId);
+                        console.log("userList----------", userList.length);
+                    }
+                    userList.push({userId: user.userId, data: user.username, icon: user.icon});
                 }
                 else if(parsedMessage.type === "left"){
-                    // console.log("left received");
-                    removeFromList(username);
+                    removeFromList(user.userId);
                 }
                 // console.log("current users", users);
                 // remove a user
                 // broadcast to all users in the chat
-                let msg = tools.formatMsg(users, parsedMessage.type, username, parsedMessage.data);
+                let msg = tools.formatMsg(
+                    userList, parsedMessage.type, user.username, user.icon, parsedMessage.data);
                 this.wss.broadcast(JSON.stringify(msg));
             }
         };
@@ -98,7 +116,10 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
 
 function removeFromList(left) {
     users =  users.filter((user) => {
-        return user !== left;
+        return user.userId !== left;
+    });
+    userList = userList.filter((user)=>{
+        return user.userId !== left;
     })
 }
 

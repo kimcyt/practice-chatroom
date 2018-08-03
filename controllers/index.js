@@ -1,5 +1,7 @@
 /*
 bugs: user leave/rejoin the chat when refresh/go to new page
+all users in the chat use the same icon
+after rename, new name appears as new member
  */
 
 //session_id 存放在客户端cookie中
@@ -8,7 +10,6 @@ bugs: user leave/rejoin the chat when refresh/go to new page
 const err = require("../configs/errors");
 const Users = require("../models/users");
 const tools = require("../utils/tools");
-
 
 
 async function login(ctx, next) {
@@ -20,9 +21,9 @@ async function login(ctx, next) {
     } else {
         //if user verified
         if (await Users.userVerified(user, userInput.password)) {
-            // sess.regenerateSession();
-            let userInfo = {userId: user.userId, username: user.username};
-            ctx.session.user = userInfo;
+            let userInfo = {userId: user.userId, username: user.username, icon: user.icon};
+            // console.log(ctx.request.headers);
+            ctx.session = userInfo;
             response = {status: "ok", userInfo: userInfo, location: "main.html"};
         } else {
             response = {status: "error", errorMsg: "Invalid userId or password. Please try again or sign up."}
@@ -94,14 +95,16 @@ async function getUserInfo(ctx){
 
 async function updateUsername(ctx){
     let userInput = ctx.request.body;
-    let userId = ctx.session.user.userId;
+    let userId = ctx.session.userId;
+    console.log("session", ctx.session);
     await Users.rename(userId, userInput.username);
+    ctx.session.username = userInput.username;
     ctx.response.body = JSON.stringify({msg: "Username has been updated."});
 }
 
 async function updatePassword(ctx){
     let userInput = ctx.request.body;
-    let userId = ctx.session.user.userId;
+    let userId = ctx.session.userId;
     let user =  await Users.findUser(userId);
     if (await Users.userVerified(user, userInput.oldPwd)){
         await Users.changePassword(userId, userInput.newPwd);
@@ -109,6 +112,14 @@ async function updatePassword(ctx){
     } else{
         ctx.response.body = JSON.stringify({msg: "Old password does not match."});
     }
+}
+
+async function updateIcon(ctx){
+    let data = ctx.request.body;
+    let userId = ctx.session.userId;
+    await Users.changeIcon(userId, data.newIcon);
+    ctx.session.icon = data.newIcon;
+    ctx.response.body = JSON.stringify({msg: "Icon has been updated."});
 }
 
 
@@ -119,5 +130,6 @@ module.exports = {
     "/logIn/": logIn,
     "/getUserInfo/": getUserInfo,
     "/updateUsername/": updateUsername,
-    "/updatePassword/": updatePassword
+    "/updatePassword/": updatePassword,
+    "/updateIcon/": updateIcon
 }

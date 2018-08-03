@@ -24,21 +24,29 @@ class Body extends React.Component{
         // this.onUnload = this.onUnload.bind(this);
         this.profileOnClick=this.profileOnClick.bind(this);
 
+        //--todo--if the user already logged in(found in userList on server), jump to login page
         this.connection = new WebSocket("ws://localhost:3000");
         this.connection.onmessage = this.handleServerMsg;
         this.connection.onopen = this.joinUser;
         //when jumping to another
         window.onbeforeunload = this.logOut;
-        console.log("icon clicked", this.state.iconClicked);
     }
 
     handleServerMsg(event) {
-        let msg = JSON.parse(event.data);  //receive a message object: users, type, user, data
-        this.setState({users: msg.users});
-        console.log("users in client", this.state.users, "msg", this.state.messages);
-        this.setState({messages: this.addElmToList(this.state.messages, msg.data)});
-        // sessionStorage.setItem("logs", JSON.stringify(this.state.messages));
-        // sessionStorage.setItem("users", JSON.stringify(this.state.users));
+
+        /*
+        msg.userList = users || "";
+    msg.type = type || "";
+    msg.user = {icon: icon || defaultIcon, username: user || ""};
+    if(type==="join" || type==="left")
+        msg.data= {icon: icon || defaultIcon, msg: user + data};
+    else
+        msg.data = {icon: icon || defaultIcon, msg: data};
+        */
+        let data = JSON.parse(event.data);  //receive a message object: userList, type, user, data
+        this.setState({users: data.userList});
+        // console.log("users in client", this.state.users, "msg", this.state.messages);
+        this.setState({messages: this.addElmToList(this.state.messages, data.data)});
     }
 
     // onUnload(){
@@ -50,23 +58,23 @@ class Body extends React.Component{
     //     }
     // }
 
+    addElmToList(arr, elm){
+        arr.push(elm);
+        return arr;
+    }
+
     sendMsg(msg) {
         if (!msg.trim() || this.connection.readyState!==1)
             return;
         //send to wsSever, which puts it into objcet and sends back to all clients
-        console.log('sending...', msg);
         this.connection.send(
-            JSON.stringify({
-                user:window.sessionStorage.getItem("username"), type: "chat", data: msg.trim()
+            JSON.stringify(
+                {userId: sessionStorage.getItem("userId"), type: "chat", data: msg.trim()
             }));
         this.setState({textContent: ""});
         this.render();
     }
 
-    addElmToList(arr, elm) {
-        arr.push(elm);
-        return arr;
-    }
 
     joinUser(){
     // send a msg to server of the type "join"
@@ -78,18 +86,9 @@ class Body extends React.Component{
 
         let msg = {};
         // msg.userId = sessionStorage.getItem("userId");
-        msg.user = window.sessionStorage.getItem("username");
+        msg.userId = sessionStorage.getItem("userId");
         msg.type = "join";
         msg.data = " joined the chat";
-        // msg.disbroadcast = false;
-
-        // let entry = window.performance.getEntriesByType("navigation");
-        // if(entry[0].type==="reload"){
-        //     // this.setState({messages: JSON.parse(sessionStorage.getItem("logs"))});
-        //     // this.setState({users: JSON.parse(sessionStorage.getItem("users"))});
-        //     // return;
-        //     msg.broadcast = false;
-        // }
         this.connection.send(JSON.stringify(msg));
 
 
@@ -101,11 +100,10 @@ class Body extends React.Component{
     }
 
     renderList(data) {
-
         return data.map((elm) => {
             return <li>
-                <div className={"message"}><img src={this.state.icon}/>
-                    <span>{elm}</span>
+                <div className={"message"}><img src={elm.icon}/>
+                    <span>{elm.data}</span>
                 </div>
             </li>
         });
@@ -120,17 +118,16 @@ class Body extends React.Component{
 
     profileOnClick(){
         // let elm = event.target;
-        console.log("onclick", this.state.iconClicked);
         this.setState({iconClicked: !this.state.iconClicked});
         // window.location.href = "user_profile.html";
     }
 
     logOut(){
 
-        let entry = window.performance.getEntriesByType("navigation");
-        if(entry[0].type!=="reserved"){
-            return;
-        }
+        // let entry = window.performance.getEntriesByType("navigation");
+        // if(entry[0].type!=="reserved"){
+        //     return console.log("not reserved");
+        // }
         //when refresh, sessions are still here
 
 
@@ -141,7 +138,7 @@ class Body extends React.Component{
         if(!window.sessionStorage.getItem("username"))
             return;
         let msg = {};
-        msg.user = window.sessionStorage.getItem("username");
+        msg.userId = sessionStorage.getItem("userId");
         msg.type = "left";
         msg.data = " left the chat";
 
@@ -233,7 +230,7 @@ let MsgList = React.createClass({
     render: function () {
 
         return <div>
-            <h2> Messages </h2>
+            <h2> ChatRoom </h2>
                 <ul ref={this.props.setScroller}>
                     {this.props.renderList(this.props.msgs)}
                 </ul>

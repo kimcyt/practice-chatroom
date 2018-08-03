@@ -19,7 +19,12 @@ const Users = new Schema({
     onLogin: {
         type: Boolean,
         default: false
-    }
+    },
+
+    icon: {
+        type: String,
+        default: "user_icons/default.png"
+    },
 });
 
 Users.statics.findUser = async function (userId) {
@@ -63,12 +68,17 @@ Users.statics.rename = async function(userId, newName){
 
 Users.statics.changePassword = async function(userId, newPwd){
     await this.update({userId: userId}, {$set: {password:newPwd}});
+
+};
+
+Users.statics.changeIcon = async function(userId, newIcon){
+    await this.update({userId: userId}, {$set: {icon:newIcon}});
 };
 
 
 Users.statics.userVerified = async function (user, password) {
     try {
-        console.log(user, password);
+        // console.log(user, password);
         return (user && password === user["password"]);
     } catch (e) {
         throw e;

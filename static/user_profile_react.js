@@ -1,3 +1,5 @@
+//--todo: if rename/image updated, notify server
+
 class Body extends React.Component{
     constructor(props) {
         super(props);
@@ -20,6 +22,9 @@ class Body extends React.Component{
         this.updateIcon = this.updateIcon.bind(this);
         this.changePassword = this.changePassword.bind(this);
         this.rename = this.rename.bind(this);
+        if(!sessionStorage.username){
+            location.href="login.html";
+        }
     }
 
     changeIconClick(){
@@ -31,9 +36,19 @@ class Body extends React.Component{
     }
 
     updateIcon(){
-        window.localStorage.setItem(sessionStorage.getItem("userId"), this.state.icon);
         window.sessionStorage.setItem("icon", this.state.icon);
-        this.setState({msg: "Icon updated."});
+        fetch("/updateIcon/", {
+            method:"POST", body: JSON.stringify({newIcon: this.state.icon}),
+            headers: {"Content-Type": "application/json"}, credentials: "include"
+        }).then(response=> {
+            if (response.ok) {
+                response.json().then(data => {
+                    this.setState({msg: data.msg});
+                });
+            } else {
+                this.setState({msg: response.statusText});
+            }
+        })
     }
 
     goToChat(){
@@ -42,7 +57,10 @@ class Body extends React.Component{
 
     changePassword(e){
         e.preventDefault();
-        if(this.state.pwd1 !== this.state.pwd2){
+        if(!this.state.oldPwd || !this.state.pwd1){
+            return this.setState({msg: "Passwords cannot be blank."});
+        }
+        if(this.state.pwd1 !== this.state.pwd2 ){
             return this.setState({msg: "The retyped password does not match"});
         }
         fetch("/updatePassword/", {
@@ -62,6 +80,9 @@ class Body extends React.Component{
 
     rename(e){
         e.preventDefault();
+        if(!this.state.newName){
+                return this.setState({msg: "New username cannot be blank."});
+        }
         fetch("/updateUsername/", {
             method:"POST", body: JSON.stringify({username: this.state.newName}),
             headers: {"Content-Type": "application/json"}, credentials: "include"

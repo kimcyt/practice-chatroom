@@ -1,15 +1,16 @@
 const url = require("url");
 
 
-function formatMessage(users, type, user, data) {
+function formatMessage(users, type, user, icon, data) {
     let msg = {};
-    msg.users= users || "";
+    let defaultIcon = "user_icons/default.png";
+    msg.userList = users || "";
     msg.type = type || "";
     msg.user = user || "";
     if(type==="join" || type==="left")
-        msg.data= user + data;
+        msg.data= {icon: icon || defaultIcon, data: user + data};
     else
-        msg.data = user + " : " + data;
+        msg.data = {icon: icon || defaultIcon, data: data};
     return msg;
 }
 
