@@ -13,10 +13,8 @@ const Users = require("./models/users");
 const path = require("path");
 const app = new Koa();
 const MongoStore = require('./utils/MongoStore');
-let users = []; //a list of unique userID
-let userList = []; // a list of users that contains username and icon
-
-
+let userLogs = {};
+let onlineUsers = [];
 
 mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     console.log('db connected');
@@ -29,14 +27,11 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     app.use(session({
         key: "big:face",
         maxAge: 30*60*1000,
-        // signed: false,
         store: MongoStore
     }, app));
     app.use(bodyParser());
     app.use(controller());
     app.use(serve(path.resolve(__dirname, "static")));
-
-
 
     let server = app.listen(settings.port);
     let wsServer = new WebSocket.Server({server});
@@ -44,64 +39,47 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     wsServer.on("connection", (ws, req)=>{
         ws.wss = wsServer;  // // 绑定WebSocketServer对象:
         //--todo: if userId is already online, reject the connection
-        console.log("connection req");
 
         ws.onmessage = async function (message) {
-            //--todo: update userList everytime message received
-            // when received join-userId, get all the info of the id, add to userList
             if (message) {
-                // console.log('received message; ', message.data);
                 let parsedMessage = JSON.parse(message.data);
-
-                //when join, user is an object that contains all userInfo
                 let userId = parsedMessage.userId;
                 let user = await Users.findUser(userId);
-                // console.log("------user in app", user);
 
                 if (parsedMessage.type === "join"){
-                    //if new user
-                    if(users.indexOf(user.userId) === -1){
-                        users.push(user.userId);
-                    } else{
-                        //if old user, update icon/name in userList
-                        removeFromList(user.userId);
-                        console.log("userList----------", userList.length);
+                    ws.userId = userId;
+                    console.log(".......join received");
+                    //if the user is new, tie connection to the user
+                    await Users.logUser(userId, true);
+                    if(onlineUsers.indexOf(userId) === -1){
+                        onlineUsers.push(userId);
+
                     }
-                    userList.push({userId: user.userId, data: user.username, icon: user.icon});
+                    //update user icon and username everytime new message received
+                    userLogs[userId] = {userId: userId, username: user.username, icon: user.icon, online: true};
                 }
-                else if(parsedMessage.type === "left"){
-                    removeFromList(user.userId);
-                }
-                // console.log("current users", users);
-                // remove a user
-                // broadcast to all users in the chat
+
                 let msg = tools.formatMsg(
-                    userList, parsedMessage.type, user.username, user.icon, parsedMessage.data);
+                    convertToList(userLogs), parsedMessage.type, user.username, user.userId, parsedMessage.data);
                 this.wss.broadcast(JSON.stringify(msg));
             }
         };
-        // ws.onopen = async function () {
-        //     console.log("connection is opening-------");
-        //     try{
-        //         await Users.logUser(this.userId, true);
-        //     } catch (e) {
-        //         console.log(e);
-        //     }
-        //         //send to server
-        // };
-        // ws.onclose = async function () {
-        //     console.log("------connection is closing");
-        //     //triggered when client refreshes page or closing the tab
-        //     try{
-        //         removeFromList(ws.username);
-        //         let msg = tools.formatMsg(ws.username, " left the chat");
-        //         this.wss.broadcast(JSON.stringify(msg));
-        //         // await Users.logUser(this.userId, false);
-        //     } catch (e) {
-        //         console.log(e);
-        //     }
-        //
-        // }
+
+        ws.onclose = async function () {
+            console.log("------connection is closing", ws.userId);
+            //triggered when client refreshes page or closing the tab
+            try{
+                let user = await Users.findUser(ws.userId);
+                await Users.logUser(user.userId, false);
+                removeFromOnlineUsers(user.userId);
+                userLogs[user.userId].online = false;
+                let msg = tools.formatMsg(convertToList(userLogs), "left", user.username, user.userId, " left the chat");
+                this.wss.broadcast(JSON.stringify(msg));
+            } catch (e) {
+                console.log(e);
+            }
+
+        }
     });
 
     wsServer.broadcast = function (data) {
@@ -114,15 +92,22 @@ mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     console.log(err);
 });
 
-function removeFromList(left) {
-    users =  users.filter((user) => {
-        return user.userId !== left;
-    });
-    userList = userList.filter((user)=>{
+function removeFromOnlineUsers(left){
+    // onlineUsers =  onlineUsers.filter((user) => {
+    //     return user.userId !== left;
+    // });
+    onlineUsers = onlineUsers.filter((user)=>{
         return user.userId !== left;
     })
 }
 
+function convertToList(users) {
+    let userList = [];
+    for(let userId in users){
+        userList.push(users[userId]);
+    }
+    return userList;
+}
 
 
 

@@ -1,5 +1,4 @@
 
-
 class Body extends React.Component{
     constructor(props){
         super(props);
@@ -8,7 +7,8 @@ class Body extends React.Component{
             users: [],
             textContent: "",
             icon: window.sessionStorage.getItem("icon"),
-            iconClicked: false
+            iconClicked: false,
+            userLogs: []
         };
 
         this.scroller = null;
@@ -19,44 +19,30 @@ class Body extends React.Component{
         this.handleTextChange=this.handleTextChange.bind(this);
         this.scrollToBottom = this.scrollToBottom.bind(this);
         this.setScrollerRef = element => this.scroller = element;
-        this.renderList = this.renderList.bind(this);
+        this.renderUserList = this.renderUserList.bind(this);
+        this.renderMsgList = this.renderMsgList.bind(this);
         this.logOut = this.logOut.bind(this);
-        // this.onUnload = this.onUnload.bind(this);
         this.profileOnClick=this.profileOnClick.bind(this);
 
         //--todo--if the user already logged in(found in userList on server), jump to login page
         this.connection = new WebSocket("ws://localhost:3000");
         this.connection.onmessage = this.handleServerMsg;
         this.connection.onopen = this.joinUser;
-        //when jumping to another
-        window.onbeforeunload = this.logOut;
     }
 
     handleServerMsg(event) {
-
-        /*
-        msg.userList = users || "";
-    msg.type = type || "";
-    msg.user = {icon: icon || defaultIcon, username: user || ""};
-    if(type==="join" || type==="left")
-        msg.data= {icon: icon || defaultIcon, msg: user + data};
-    else
-        msg.data = {icon: icon || defaultIcon, msg: data};
-        */
         let data = JSON.parse(event.data);  //receive a message object: userList, type, user, data
         this.setState({users: data.userList});
-        // console.log("users in client", this.state.users, "msg", this.state.messages);
         this.setState({messages: this.addElmToList(this.state.messages, data.data)});
+
     }
 
-    // onUnload(){
-    //     //not working in here
-    //     if(!this.state.iconClicked) {
-    //         this.connection.send(
-    //             JSON.stringify({user:window.sessionStorage.getItem("username"),type: "left", data: " left the chat"}));
-    //         fetch("/logout?userId="+sessionStorage.getItem("userId"),{method:"GET"});
-    //     }
-    // }
+    findIconById(id){
+        for(let user of this.state.users){
+            if(user.userId===id)
+                return user.icon;
+        }
+    }
 
     addElmToList(arr, elm){
         arr.push(elm);
@@ -79,8 +65,7 @@ class Body extends React.Component{
     joinUser(){
     // send a msg to server of the type "join"
         if(!window.sessionStorage.getItem("username")){
-            window.location.href="login.html";
-            return;
+            return window.location.href="login.html";
         }
         // fetch("/logIn?userId="+sessionStorage.getItem("userId"),{method:"GET"});
 
@@ -91,18 +76,33 @@ class Body extends React.Component{
         msg.data = " joined the chat";
         this.connection.send(JSON.stringify(msg));
 
-
-
     }
 
     handleTextChange(){
         this.setState({textContent: event.target.value});
     }
 
-    renderList(data) {
+    renderUserList(users){
+        return users.map(user=>{
+            if(user.online){
+                return <li>
+                    <div className={"message"}>
+                        <img src={user.icon} />
+                        <span>{user.username}</span>
+                    </div>
+                </li>
+            } else{
+                return null;
+            }
+        })
+    }
+
+    renderMsgList(data) {
         return data.map((elm) => {
+            // console.log("in render list", elm.userId, this.findIconById(elm.userId));
             return <li>
-                <div className={"message"}><img src={elm.icon}/>
+                <div className={"message"}>
+                    <img src={this.findIconById(elm.userId) } />
                     <span>{elm.data}</span>
                 </div>
             </li>
@@ -123,43 +123,8 @@ class Body extends React.Component{
     }
 
     logOut(){
-
-        // let entry = window.performance.getEntriesByType("navigation");
-        // if(entry[0].type!=="reserved"){
-        //     return console.log("not reserved");
-        // }
-        //when refresh, sessions are still here
-
-
-        //when go to another page
-
-
-        //when click logout
-        if(!window.sessionStorage.getItem("username"))
-            return;
-        let msg = {};
-        msg.userId = sessionStorage.getItem("userId");
-        msg.type = "left";
-        msg.data = " left the chat";
-
-        this.connection.send(JSON.stringify(msg));
-        // fetch("/logout?userId="+sessionStorage.getItem("userId"),{method:"GET"});
-        // window.sessionStorage.clear();
+        this.connection.close();
         window.location.href = "login.html";
-
-
-        //
-        // let entry = window.performance.getEntriesByType("navigation");
-        // if(entry[0].type==="reload"){
-        //     // this.setState({messages: JSON.parse(sessionStorage.getItem("logs"))});
-        //     // this.setState({users: JSON.parse(sessionStorage.getItem("users"))});
-        //     // return;
-        //     msg.broadcast = false;
-        // }
-        // this.connection.send(JSON.stringify(msg));
-        // fetch("/logout?userId="+sessionStorage.getItem("userId"),{method:"GET"});
-        // window.sessionStorage.clear();
-        // window.location.href = "login.html";
     }
 
     componentDidMount(){
@@ -182,11 +147,11 @@ class Body extends React.Component{
             <div id={"window"}>
                 <div id={"userWindow"}>
                     <UserList users={this.state.users}
-                              renderList={this.renderList}/>
+                              renderList={this.renderUserList}/>
                 </div>
                 <div id={"chatWindow"}>
                     <MsgList msgs={this.state.messages}
-                             renderList={this.renderList}
+                             renderList={this.renderMsgList}
                              setScroller={this.setScrollerRef}/>
                 </div>
                 <div id={"textBox"}>

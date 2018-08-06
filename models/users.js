@@ -54,12 +54,10 @@ Users.statics.addUser = async function(userId, username, password){
 };
 
 
-
-
-// Users.statics.logUser = async function(userId, logged){
-//     console.log("------------changing login state to", logged);
-//     await this.update({userId: userId}, {$set: {onLogin:logged}});
-// };
+Users.statics.logUser = async function(userId, logged){
+    console.log("------------changing login state to", logged);
+    await this.update({userId: userId}, {$set: {onLogin:logged}});
+};
 
 Users.statics.rename = async function(userId, newName){
     await this.update({userId: userId}, {$set: {username:newName}});

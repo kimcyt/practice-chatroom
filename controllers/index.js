@@ -16,15 +16,21 @@ async function login(ctx, next) {
     let userInput = ctx.request.body;
     let response = {};
     let user = await Users.findUser(userInput.userId);
+    console.log("user in login", user);
     if (!user) {
         response = {status: "error", errorMsg: "UserId does not exist. Please try again."};
     } else {
         //if user verified
         if (await Users.userVerified(user, userInput.password)) {
-            let userInfo = {userId: user.userId, username: user.username, icon: user.icon};
-            // console.log(ctx.request.headers);
-            ctx.session = userInfo;
-            response = {status: "ok", userInfo: userInfo, location: "main.html"};
+            if(user.onLogin){
+                response = {status: "error", errorMsg: "User already logged in."};
+            } else{
+                let userInfo = {userId: user.userId, username: user.username, icon: user.icon};
+                // console.log(ctx.request.headers);
+                ctx.session = userInfo;
+                response = {status: "ok", userInfo: userInfo, location: "main.html"};
+                await Users.logUser(user.userId, true);
+            }
         } else {
             response = {status: "error", errorMsg: "Invalid userId or password. Please try again or sign up."}
         }
@@ -121,6 +127,7 @@ async function updateIcon(ctx){
     ctx.session.icon = data.newIcon;
     ctx.response.body = JSON.stringify({msg: "Icon has been updated."});
 }
+
 
 
 module.exports = {
