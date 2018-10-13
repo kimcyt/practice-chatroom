@@ -4,25 +4,23 @@
     <meta charset="UTF-8">
     <title>Sign Up For Free</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="signup_styles.css">
 </head>
 <body>
-    <form onsubmit=signUp(event)>
-        <span>UserId:</span><input type="text" name="userId" required>
-        <br>
-        <span>Username:</span><input type="text" name="username" required>
-        <br>
-        <span>Password:</span><input type="password" name="password" required>
-        <br>
-        <input type="submit" value="Sign Up" >
-        <div id="result"></div>
-    </form>
-<!--todo
+    <div class="form">
+        <form onsubmit=signUp(event)>
+            <span>UserId:</span><input type="text" name="userId" required>
+            <br>
+            <span>Username:</span><input type="text" name="username" required>
+            <br>
+            <span>Password:</span><input type="password" name="password" required>
+            <br>
+            <input type="submit" value="Sign Up" >
+            <div id="result"></div>
+        </form>
+    </div>
 
-4.update render list so it displays icon when user sends messages
-5.display username on chatroom under icon
-6.display userId when hovering icon
-7.display a list of setting options when clicking the icon
--->
+
 
 <script>
     function signUp(e) {

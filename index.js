@@ -5,7 +5,6 @@ const Users = require("./models/users");
 const app = require("./app");
 const WebSocket = require("ws");
 
-
 mongoose.connect(settings.database, { useNewUrlParser: true }).then(() => {
     console.log('db connected');
 
