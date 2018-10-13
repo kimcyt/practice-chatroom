@@ -169,7 +169,7 @@ let SettingList = React.createClass({
    render: function () {
        if(this.props.clicked){
            // this.props.resetClick();
-           return <div>
+           return <div className={"profile"}>
                <ul>
                    <li><a href={"user_profile.html"}>Profile</a></li>
                    {/*<span>{"  "}</span><li><a href={"user_profile.html"}>Settings</a></li>*/}

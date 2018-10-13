@@ -70,14 +70,14 @@ let RenderBody = React.createClass({
     },
     render: function () {
         let user = this.state.user;
-        return <div>
+        return <div id={"main"}>
             {/*render header*/}
             <div id={"header"}>
                 <h1>Welcome to the ChatRoom</h1>
                 <Greeting user={user} />
             </div>
             {/*render body*/}
-            <div>
+            <div >
                 <UserInput user={user}
                            onSubmit = {this.onSubmit}
                            result = {this.state.result}
@@ -95,14 +95,17 @@ let UserInput = React.createClass({
     render: function(){
         return <div className={"userInputs"}>
             <form method={"GET"} >
-                <span>UserId</span><input type={"text"} onChange={this.props.updateUser} required={true}/>
+                <div className={"userInput"}>
+                    <span>User ID</span><input type={"text"} onChange={this.props.updateUser} required={true}/>
+                </div>
+                <div className={"userInput"}>
+                    <span>Password</span><input type={"password"} onChange={this.props.updatePassword} required={true}/>
+                </div>
                 <br/>
-                <span>Password</span><input type={"password"} onChange={this.props.updatePassword} required={true}/>
-                <br/>
-                <input type={"submit"} value={"Login"} onClick={this.props.onSubmit}/>
+                <input id={"loginButton"} type={"submit"} value={"Login"} onClick={this.props.onSubmit}/>
                 <br/>
                 <br/>
-                <a href={"signup.html"}> Sign Up </a>
+                <a id={"signUp"} href={"signup.html"}> Sign Up </a>
             </form>
             <p id={"loginResult"}>{this.props.result}</p>
         </div>
